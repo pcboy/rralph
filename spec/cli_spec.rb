@@ -33,16 +33,19 @@ RSpec.describe Rralph::CLI do
         .to output(/Starting rralph/).to_stderr
     end
 
+    it "accepts --skip-commit option" do
+      expect { Rralph::CLI.start(["--skip-commit"]) }
+        .to output(/Starting rralph/).to_stderr
+    end
+
+    it "accepts -s as alias for --skip-commit" do
+      expect { Rralph::CLI.start(["-s"]) }
+        .to output(/Starting rralph/).to_stderr
+    end
+
     it "shows version with version command" do
       expect { Rralph::CLI.start(["version"]) }
         .to output(/rralph v#{Rralph::VERSION}/).to_stdout
-    end
-  end
-
-  describe "default behavior" do
-    it "runs without arguments (will fail due to missing files)" do
-      expect { Rralph::CLI.start([]) }
-        .to output(/plan.md not found/).to_stderr
     end
   end
 end

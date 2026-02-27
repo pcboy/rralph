@@ -48,6 +48,25 @@ Requirements:
 Test: 0→EVEN, 7→ODD, -4→EVEN, abc→error, no arg→error
 ```
 
+After running `rralph start` you will get a `todo.md` generated for you like:
+
+```
+# Todo List
+
+- [ ] Create `odd_even.sh` file with bash shebang
+- [ ] Add input validation to check if argument is provided
+- [ ] Add regex validation for integer input (`^-?[0-9]+$`)
+- [ ] Implement even/odd check using `(( ))` arithmetic and `%` operator
+- [ ] Print "IS EVEN" or "IS ODD" based on result
+- [ ] Add error handling with exit code 1 for invalid inputs
+- [ ] Make script executable with `chmod +x`
+- [ ] Test with input `0` (expect "IS EVEN")
+- [ ] Test with input `7` (expect "IS ODD")
+- [ ] Test with input `-4` (expect "IS EVEN")
+- [ ] Test with input `abc` (expect error, exit 1)
+- [ ] Test with no argument (expect error, exit 1)
+```
+
 ### Basic Usage
 
 Run `rralph` with default settings:

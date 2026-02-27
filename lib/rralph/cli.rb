@@ -34,6 +34,11 @@ module Rralph
                   default: "todo.md",
                   aliases: "-t",
                   desc: "Path to todo.md file"
+    method_option :skip_commit,
+                  type: :boolean,
+                  default: false,
+                  aliases: "-s",
+                  desc: "Skip git commits between tasks"
 
     def start
       runner = Runner.new(
@@ -42,7 +47,8 @@ module Rralph
         watch: options[:watch],
         plan_path: options[:plan_path],
         learnings_path: options[:learnings_path],
-        todo_path: options[:todo_path]
+        todo_path: options[:todo_path],
+        skip_commit: options[:skip_commit]
       )
 
       runner.run

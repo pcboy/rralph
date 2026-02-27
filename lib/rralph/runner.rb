@@ -8,7 +8,8 @@ module Rralph
       watch: false,
       plan_path: "plan.md",
       learnings_path: "learnings.md",
-      todo_path: "todo.md"
+      todo_path: "todo.md",
+      skip_commit: false
     )
       @max_failures = max_failures
       @ai_command = ai_command
@@ -16,6 +17,7 @@ module Rralph
       @plan_path = plan_path
       @learnings_path = learnings_path
       @todo_path = todo_path
+      @skip_commit = skip_commit
 
       @cycle_count = 0
       @failure_count = 0
@@ -115,11 +117,15 @@ module Rralph
       new_learnings = @parser.extract_learnings(response)
       @file_updater.append_learnings(new_learnings) if new_learnings.any?
 
-      commit_message = "rralph: completed task and updated artifacts [cycle #{@cycle_count}]"
-      sha = @git.commit_changes(commit_message)
+      if @skip_commit
+        log("⏭️  [Cycle #{@cycle_count}] Skipping commit (skip_commit enabled)")
+      else
+        commit_message = "rralph: completed task and updated artifacts [cycle #{@cycle_count}]"
+        sha = @git.commit_changes(commit_message)
 
-      if sha
-        log("   Git commit: #{sha}")
+        if sha
+          log("   Git commit: #{sha}")
+        end
       end
 
       true
@@ -182,9 +188,9 @@ module Rralph
 
       timestamp = Time.now.strftime("%Y%m%d_%H%M%S")
       filename = "#{logs_dir}/cycle_#{@cycle_count}_#{timestamp}.md"
-      
+
       # Extract just the current task for the header
-      task_match = prompt.match(/YOUR CURRENT TASK.*?>\s*(.+?)\n/)
+      task_match = prompt.match(/YOUR CURRENT TASK.*?\n>\s*(.+?)\n/)
       task_text = task_match ? task_match[1].strip : "Unknown"
 
       content = <<~LOG
@@ -233,11 +239,15 @@ module Rralph
 
           File.write(@todo_path, todo_content)
 
-          commit_message = "rralph: generated todo from plan.md"
-          sha = @git.commit_changes(commit_message)
+          if @skip_commit
+            log("⏭️  Generated #{todo_items.size} tasks (skip_commit enabled, no commit)")
+          else
+            commit_message = "rralph: generated todo from plan.md"
+            sha = @git.commit_changes(commit_message)
 
-          if sha
-            log("✅ Generated #{todo_items.size} tasks. Git commit: #{sha}")
+            if sha
+              log("✅ Generated #{todo_items.size} tasks. Git commit: #{sha}")
+            end
           end
         else
           log("❌ Could not parse tasks from AI response")
