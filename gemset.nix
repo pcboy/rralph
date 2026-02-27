@@ -29,6 +29,16 @@
     };
     version = "0.5.0";
   };
+  bump = {
+    groups = ["development"];
+    platforms = [];
+    source = {
+      remotes = ["https://rubygems.org"];
+      sha256 = "0x89bxsbbcvwvdkjvi7q8c6f2ssnckhi3cg7alzqdliij3vrr4h7";
+      type = "gem";
+    };
+    version = "0.10.0";
+  };
   diff-lcs = {
     groups = ["default" "test"];
     platforms = [];
