@@ -171,9 +171,9 @@ RSpec.describe Rralph::Parser do
 
     it "includes the standard instruction header" do
       prompt = parser.build_prompt
-      expect(prompt).to include("Original plan: @plan.md")
-      expect(prompt).to include("Learnings: @learnings.md")
-      expect(prompt).to include("Todo list: @todo.md")
+      expect(prompt).to include("--- plan.md (context) ---")
+      expect(prompt).to include("--- learnings.md (prior knowledge) ---")
+      expect(prompt).to include("--- todo.md (full list - work on first unchecked only) ---")
     end
   end
 end

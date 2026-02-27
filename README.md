@@ -109,6 +109,8 @@ Options:
                                                # Default: learnings.md
   -t, [--todo-path=TODO_PATH]                  # Path to todo.md file
                                                # Default: todo.md
+  -s, [--skip-commit], [--no-skip-commit]      # Skip git commits between tasks
+                                               # Default: false
 ```
 
 ### Examples
@@ -129,6 +131,12 @@ Use a custom AI command:
 
 ```bash
 rralph start --ai-command "claude --prompt"
+```
+
+Skip git commits between tasks (files are updated but not committed):
+
+```bash
+rralph start --skip-commit
 ```
 
 View progress statistics:
