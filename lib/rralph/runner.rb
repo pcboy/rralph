@@ -120,7 +120,7 @@ module Rralph
       if @skip_commit
         log("⏭️  [Cycle #{@cycle_count}] Skipping commit (skip_commit enabled)")
       else
-        commit_message = "rralph: completed task and updated artifacts [cycle #{@cycle_count}]"
+        commit_message = "rralph: #{current_task[:text]} [cycle #{@cycle_count}]"
         sha = @git.commit_changes(commit_message)
 
         if sha
