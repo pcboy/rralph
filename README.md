@@ -65,16 +65,31 @@ rralph --max-failures 2 --watch
 ### Command-Line Options
 
 ```
-rralph run [OPTIONS]
+➜  rralph help      
+Commands:
+  rralph help [COMMAND]  # Describe available commands or one specific command
+  rralph start           # Run the rralph orchestrator
+  rralph stats           # Show progress statistics
+  rralph tree            # Print a tree of all available commands
+  rralph version         # Show rralph version
+
+➜  rralph help start
+Usage:
+  rralph start
 
 Options:
-  -m, --max-failures N       Maximum allowed failures before stopping (default: 3)
-  -a, --ai-command "CMD"     AI command to invoke (default: "qwen-code -y -s")
-  -w, --watch                Run in continuous loop until completion or max failures
-  -p, --plan-path PATH       Path to plan.md file (default: "plan.md")
-  -l, --learnings-path PATH  Path to learnings.md file (default: "learnings.md")
-  -t, --todo-path PATH       Path to todo.md file (default: "todo.md")
-  -h, --help                 Show help message
+  -m, [--max-failures=N]                       # Maximum allowed failures before stopping
+                                               # Default: 3
+  -a, [--ai-command=AI_COMMAND]                # AI command to invoke
+                                               # Default: qwen-code -y -s
+  -w, [--watch], [--no-watch], [--skip-watch]  # Run in continuous loop until completion or max failures
+                                               # Default: false
+  -p, [--plan-path=PLAN_PATH]                  # Path to plan.md file
+                                               # Default: plan.md
+  -l, [--learnings-path=LEARNINGS_PATH]        # Path to learnings.md file
+                                               # Default: learnings.md
+  -t, [--todo-path=TODO_PATH]                  # Path to todo.md file
+                                               # Default: todo.md
 ```
 
 ### Examples
@@ -88,13 +103,13 @@ rralph
 Run continuously until all tasks are done or max failures reached:
 
 ```bash
-rralph --watch --max-failures 5
+rralph start --watch --max-failures 5
 ```
 
 Use a custom AI command:
 
 ```bash
-rralph --ai-command "claude --prompt"
+rralph start --ai-command "claude --prompt"
 ```
 
 View progress statistics:
