@@ -1,5 +1,5 @@
 module Rralph
-  VERSION = "0.1.1"
+  VERSION = "0.1.2"
 
   class Error < StandardError; end
   class FileNotFound < Error; end
