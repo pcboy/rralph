@@ -104,7 +104,13 @@ module Rralph
 
       if @parser.failure_detected?(response)
         @failure_count += 1
-        log("❌ [Cycle #{@cycle_count}] FAILURE detected. Failures: #{@failure_count}/#{@max_failures}")
+        log("❌ [Cycle #{@cycle_count}] TASK_FAILURE detected. Failures: #{@failure_count}/#{@max_failures}")
+        return handle_failure
+      end
+
+      unless @parser.task_completed?(response)
+        @failure_count += 1
+        log("❌ [Cycle #{@cycle_count}] Neither TASK_DONE nor TASK_FAILURE found. Failures: #{@failure_count}/#{@max_failures}")
         return handle_failure
       end
 

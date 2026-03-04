@@ -155,7 +155,7 @@ Learnings: 6 lines
 1. **Read** — `rralph` reads `plan.md`, `learnings.md`, and `todo.md`
 2. **Prompt** — Builds a prompt with file contents and sends to LLM
 3. **Parse** — Analyzes AI response for:
-   - `FAILURE` keyword (case-insensitive, whole word)
+   - `TASK_FAILURE` keyword (case-sensitive, whole word)
    - New learnings to extract
 4. **Update** — On success:
    - Marks current task as complete in `todo.md`
@@ -165,7 +165,7 @@ Learnings: 6 lines
 
 ### Failure Handling
 
-- Each `FAILURE` response increments a counter
+- Each `TASK_FAILURE` response increments a counter
 - Non-failure responses reset the counter to 0
 - When max failures reached, `rralph` exits with error:
 - ```

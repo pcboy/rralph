@@ -58,7 +58,11 @@ module Rralph
     end
 
     def failure_detected?(response)
-      response.match?(/\bFAILURE\b/i)
+      response.match?(/\bTASK_FAILURE\b/)
+    end
+
+    def task_completed?(response)
+      response.match?(/\bTASK_DONE\b/)
     end
 
     def extract_learnings(response)
@@ -117,15 +121,15 @@ module Rralph
         2. Write a unit test for it
         3. Run the test
         4. Respond with exactly one of:
-           - "DONE" if the task is complete and test passes
-           - "FAILURE" if the test fails after your best effort
+           - "TASK_DONE" if the task is complete and test passes
+           - "TASK_FAILURE" if the test fails after your best effort
         5. Optionally add learnings as: "Learning: <insight>"
 
         IMPORTANT RULES:
         - Work on ONE task only - the one shown above
         - Do NOT implement other tasks from the todo list
         - Do NOT mark tasks as done yourself
-        - After you respond "DONE", the system will mark this task complete
+        - After you respond "TASK_DONE", the system will mark this task complete
         - Then you will receive the next task
 
         --- plan.md (context) ---
