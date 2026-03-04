@@ -1,28 +1,22 @@
-require "shellwords"
+require 'shellwords'
 
 module Rralph
   class Git
-    def initialize
-    end
+    def initialize; end
 
     def in_git_repo?
-      result = `git rev-parse --git-dir 2>/dev/null`
+      `git rev-parse --git-dir 2>/dev/null`
       $?.success?
     end
 
     def commit_changes(message)
       add_result = `git add . 2>&1`
-      unless $?.success?
-        raise GitError, "Failed to stage files: #{add_result}"
-      end
+      raise GitError, "Failed to stage files: #{add_result}" unless $?.success?
 
       commit_result = `git commit -m #{message.shellescape} 2>&1`
-      unless $?.success?
-        raise GitError, "Failed to commit: #{commit_result}"
-      end
+      raise GitError, "Failed to commit: #{commit_result}" unless $?.success?
 
-      sha = `git rev-parse --short HEAD 2>/dev/null`.strip
-      sha
+      `git rev-parse --short HEAD 2>/dev/null`.strip
     end
 
     def status

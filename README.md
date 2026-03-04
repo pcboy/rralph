@@ -111,6 +111,8 @@ Options:
                                                # Default: todo.md
   -s, [--skip-commit], [--no-skip-commit]      # Skip git commits between tasks
                                                # Default: false
+  -v, [--verbose], [--no-verbose]              # Enable verbose logging with AI thinking and real-time output
+                                               # Default: false
 ```
 
 ### Examples
@@ -172,14 +174,39 @@ Learnings: 6 lines
 
 ### Logging
 
-Human-readable logs are output to stderr:
+By default, `rralph` outputs concise progress logs to stderr:
 
 ```
-✅ [Cycle 4] Task completed. 0 failures. Git commit: abc123
-❌ [Cycle 5] FAILURE detected. Failures: 2/3
+Starting rralph with max_failures=3, ai_command='qwen-code -y -s'
+Cycle 1: Processing task: Create odd_even.sh file with bash shebang
+Executing AI command...
+Completed in 2341ms (13407 tokens)
+[Cycle 1] Task completed. 0 failures. Git commit: abc123
+   Log saved: logs/cycle_1_20260302_145738.md
 ```
 
-In `--watch` mode, AI responses are saved to `logs/` for audit trail.
+Use `--verbose` mode for detailed real-time logging including AI thinking:
+
+```bash
+rralph start --verbose
+```
+
+Verbose output shows:
+- Thinking: AI's thought process as it thinks
+- Real-time text output from the AI
+- Completion metrics (duration, token usage)
+
+Example verbose output:
+
+```
+Executing AI command...
+Thinking: The user wants me to create a bash script for checking even/odd numbers
+Thinking: I need to start with the basic file structure and shebang
+   I'll create the odd_even.sh file with a proper bash shebang.
+Completed in 1847ms (8234 tokens)
+```
+
+In `--watch` mode, full AI responses are saved to `logs/` for audit trail.
 
 ## License
 

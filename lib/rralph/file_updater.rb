@@ -1,6 +1,6 @@
 module Rralph
   class FileUpdater
-    def initialize(todo_path: "todo.md", learnings_path: "learnings.md")
+    def initialize(todo_path: 'todo.md', learnings_path: 'learnings.md')
       @todo_path = todo_path
       @learnings_path = learnings_path
     end
@@ -10,17 +10,17 @@ module Rralph
       lines = content.lines
 
       line = lines[task_index]
-      if line
-        updated_line = line.gsub(/^([-*]) \[ \]/, '\1 [x]')
-        lines[task_index] = updated_line
-        File.write(@todo_path, lines.join)
-      end
+      return unless line
+
+      updated_line = line.gsub(/^([-*]) \[ \]/, '\1 [x]')
+      lines[task_index] = updated_line
+      File.write(@todo_path, lines.join)
     end
 
     def append_learnings(new_learnings)
       return if new_learnings.empty?
 
-      existing_content = File.exist?(@learnings_path) ? File.read(@learnings_path) : ""
+      existing_content = File.exist?(@learnings_path) ? File.read(@learnings_path) : ''
       existing_learnings = existing_content.lines.map(&:strip).reject(&:empty?)
 
       unique_learnings = new_learnings.reject do |learning|
@@ -29,7 +29,7 @@ module Rralph
 
       return if unique_learnings.empty?
 
-      timestamp = Time.now.strftime("%Y-%m-%d %H:%M:%S")
+      timestamp = Time.now.iso8601
       new_section = "\n\n## Learnings - #{timestamp}\n\n"
       unique_learnings.each do |learning|
         new_section += "- #{learning}\n"

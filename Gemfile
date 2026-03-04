@@ -8,6 +8,7 @@ group :test do
 end
 
 group :development do
-  gem 'rake', '~> 13.0'
+  gem 'amazing_print'
   gem 'bump'
+  gem 'rake', '~> 13.0'
 end

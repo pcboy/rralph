@@ -1,6 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
+    amazing_print (2.0.0)
     ast (2.4.3)
     backport (1.2.0)
     benchmark (0.5.0)
@@ -104,6 +105,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  amazing_print
   bump
   rake (~> 13.0)
   rspec (~> 3.13)

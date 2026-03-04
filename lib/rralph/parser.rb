@@ -2,18 +2,18 @@ module Rralph
   class Parser
     attr_reader :plan_content, :learnings_content, :todo_content
 
-    def initialize(plan_path: "plan.md", learnings_path: "learnings.md", todo_path: "todo.md")
+    def initialize(plan_path: 'plan.md', learnings_path: 'learnings.md', todo_path: 'todo.md')
       @plan_path = plan_path
       @learnings_path = learnings_path
       @todo_path = todo_path
     end
 
     def load_files
-      raise FileNotFound, "plan.md not found" unless File.exist?(@plan_path)
+      raise FileNotFound, 'plan.md not found' unless File.exist?(@plan_path)
 
       @plan_content = File.read(@plan_path)
-      @learnings_content = File.exist?(@learnings_path) ? File.read(@learnings_path) : ""
-      @todo_content = File.exist?(@todo_path) ? File.read(@todo_path) : ""
+      @learnings_content = File.exist?(@learnings_path) ? File.read(@learnings_path) : ''
+      @todo_content = File.exist?(@todo_path) ? File.read(@todo_path) : ''
     end
 
     def pending_tasks
@@ -21,9 +21,9 @@ module Rralph
 
       @todo_content.lines.map.with_index do |line, index|
         stripped = line.strip
-        next unless stripped.start_with?("- [ ]") || stripped.start_with?("* [ ]")
+        next unless stripped.start_with?('- [ ]') || stripped.start_with?('* [ ]')
 
-        task_text = stripped.sub(/^[-*] \[ \] /, "").strip
+        task_text = stripped.sub(/^[-*] \[ \] /, '').strip
         { index: index, line: line, text: task_text, raw: stripped }
       end.compact
     end
@@ -33,9 +33,9 @@ module Rralph
 
       @todo_content.lines.map.with_index do |line, index|
         stripped = line.strip
-        next unless stripped.start_with?("- [x]") || stripped.start_with?("* [x]")
+        next unless stripped.start_with?('- [x]') || stripped.start_with?('* [x]')
 
-        task_text = stripped.sub(/^[-*] \[x\] /i, "").strip
+        task_text = stripped.sub(/^[-*] \[x\] /i, '').strip
         { index: index, line: line, text: task_text, raw: stripped }
       end.compact
     end
@@ -48,7 +48,7 @@ module Rralph
         next unless stripped.match?(/^[-*] \[[ x]\]/i)
 
         completed = stripped.match?(/^[-*] \[x\]/i)
-        task_text = stripped.sub(/^[-*] \[[ x]\] /i, "").strip
+        task_text = stripped.sub(/^[-*] \[[ x]\] /i, '').strip
         { index: index, line: line, text: task_text, raw: stripped, completed: completed }
       end.compact
     end
@@ -67,11 +67,26 @@ module Rralph
       # Match various learning patterns like:
       # "Learning: xyz", "**Learning to add:** xyz", "- Learning: xyz", etc.
       response.lines.each do |line|
-        if match = line.match(/(?:^|\s)(?:\*\*)?(?:Learning|Insight|Note|Tip|Discovered|Found|Realized)[\s*]*[:\s]*(?:to add)?[:\s]*(.+?)(?:\*\*)?(?:\s*$)/i)
-          learning = match[1].strip
-          learning = learning.gsub(/^\*\*|\*\*$/, "").strip
-          learnings << learning unless learning.empty?
+        learning_pattern = /
+          (?:^|\s)                    # Start of line or whitespace
+          (?:\*\*)?                   # Optional bold markdown
+          (?:Learning|Insight|Note|Tip|Discovered|Found|Realized)  # Learning keywords
+          [\s*]*                      # Optional whitespace or asterisks
+          [:\s]*                      # Optional colons or whitespace
+          (?:to\sadd)?                # Optional "to add"
+          [:\s]*                      # Optional colons or whitespace
+          (.+?)                       # Capture the actual learning content
+          (?:\*\*)?                   # Optional closing bold markdown
+          (?:\s*$)                    # Optional whitespace to end of line
+        /ix
+
+        unless match = line.match(learning_pattern)
+          next
         end
+
+        learning = match[1].strip
+        learning = learning.gsub(/^\*\*|\*\*$/, '').strip
+        learnings << learning unless learning.empty?
       end
 
       # Also extract from ## Learnings sections
@@ -81,7 +96,8 @@ module Rralph
         section.lines.each do |line|
           stripped = line.strip
           next if stripped.empty?
-          stripped = stripped.sub(/^[-*]\s*/, "")
+
+          stripped = stripped.sub(/^[-*]\s*/, '')
           learnings << stripped unless stripped.empty?
         end
       end
@@ -92,10 +108,10 @@ module Rralph
     def build_prompt(current_task: nil)
       <<~PROMPT
         You are in an iterative development loop. There is a todo list with tasks.
-        
+
         YOUR CURRENT TASK (the first unchecked item in todo.md):
         > #{current_task}
-        
+
         INSTRUCTIONS - Follow these steps in order:
         1. Implement ONLY the task shown above
         2. Write a unit test for it
@@ -104,14 +120,14 @@ module Rralph
            - "DONE" if the task is complete and test passes
            - "FAILURE" if the test fails after your best effort
         5. Optionally add learnings as: "Learning: <insight>"
-        
+
         IMPORTANT RULES:
         - Work on ONE task only - the one shown above
         - Do NOT implement other tasks from the todo list
         - Do NOT mark tasks as done yourself
         - After you respond "DONE", the system will mark this task complete
         - Then you will receive the next task
-        
+
         --- plan.md (context) ---
         #{@plan_content}
 

@@ -1,44 +1,49 @@
-require "thor"
-require_relative "runner"
+require 'thor'
+require_relative 'runner'
 
 module Rralph
   class CLI < Thor
-    desc "start", "Run the rralph orchestrator"
+    desc 'start', 'Run the rralph orchestrator'
     method_option :max_failures,
                   type: :numeric,
                   default: 3,
-                  aliases: "-m",
-                  desc: "Maximum allowed failures before stopping"
+                  aliases: '-m',
+                  desc: 'Maximum allowed failures before stopping'
     method_option :ai_command,
                   type: :string,
-                  default: "qwen-code -y -s",
-                  aliases: "-a",
-                  desc: "AI command to invoke"
+                  default: 'qwen-code -y -s',
+                  aliases: '-a',
+                  desc: 'AI command to invoke'
     method_option :watch,
                   type: :boolean,
                   default: false,
-                  aliases: "-w",
-                  desc: "Run in continuous loop until completion or max failures"
+                  aliases: '-w',
+                  desc: 'Run in continuous loop until completion or max failures'
     method_option :plan_path,
                   type: :string,
-                  default: "plan.md",
-                  aliases: "-p",
-                  desc: "Path to plan.md file"
+                  default: 'plan.md',
+                  aliases: '-p',
+                  desc: 'Path to plan.md file'
     method_option :learnings_path,
                   type: :string,
-                  default: "learnings.md",
-                  aliases: "-l",
-                  desc: "Path to learnings.md file"
+                  default: 'learnings.md',
+                  aliases: '-l',
+                  desc: 'Path to learnings.md file'
     method_option :todo_path,
                   type: :string,
-                  default: "todo.md",
-                  aliases: "-t",
-                  desc: "Path to todo.md file"
+                  default: 'todo.md',
+                  aliases: '-t',
+                  desc: 'Path to todo.md file'
     method_option :skip_commit,
                   type: :boolean,
                   default: false,
-                  aliases: "-s",
-                  desc: "Skip git commits between tasks"
+                  aliases: '-s',
+                  desc: 'Skip git commits between tasks'
+    method_option :verbose,
+                  type: :boolean,
+                  default: false,
+                  aliases: '-v',
+                  desc: 'Enable verbose logging with AI thinking and real-time output'
 
     def start
       runner = Runner.new(
@@ -48,41 +53,42 @@ module Rralph
         plan_path: options[:plan_path],
         learnings_path: options[:learnings_path],
         todo_path: options[:todo_path],
-        skip_commit: options[:skip_commit]
+        skip_commit: options[:skip_commit],
+        verbose: options[:verbose]
       )
 
       runner.run
     rescue Rralph::FileNotFound => e
-      $stderr.puts "Error: #{e.message}"
-      $stderr.puts "Please ensure plan.md, learnings.md, and todo.md exist in the current directory."
+      warn "Error: #{e.message}"
+      warn 'Please ensure plan.md, learnings.md, and todo.md exist in the current directory.'
       exit 1
     rescue Rralph::GitError => e
-      $stderr.puts "Git Error: #{e.message}"
+      warn "Git Error: #{e.message}"
       exit 1
-    rescue => e
-      $stderr.puts "Unexpected error: #{e.message}"
-      $stderr.puts e.backtrace.first(5)
+    rescue StandardError => e
+      warn "Unexpected error: #{e.message}"
+      warn e.backtrace.first(5)
       exit 1
     end
 
-    desc "version", "Show rralph version"
+    desc 'version', 'Show rralph version'
     def version
       puts "rralph v#{Rralph::VERSION}"
     end
 
-    desc "stats", "Show progress statistics"
+    desc 'stats', 'Show progress statistics'
     method_option :plan_path,
                   type: :string,
-                  default: "plan.md",
-                  aliases: "-p"
+                  default: 'plan.md',
+                  aliases: '-p'
     method_option :learnings_path,
                   type: :string,
-                  default: "learnings.md",
-                  aliases: "-l"
+                  default: 'learnings.md',
+                  aliases: '-l'
     method_option :todo_path,
                   type: :string,
-                  default: "todo.md",
-                  aliases: "-t"
+                  default: 'todo.md',
+                  aliases: '-t'
 
     def stats
       parser = Parser.new(
@@ -101,7 +107,7 @@ module Rralph
       puts "Pending: #{pending.size}"
       puts "Learnings: #{parser.learnings_content.lines.size} lines"
     rescue Rralph::FileNotFound => e
-      $stderr.puts "Error: #{e.message}"
+      warn "Error: #{e.message}"
       exit 1
     end
 

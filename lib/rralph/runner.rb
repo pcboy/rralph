@@ -1,15 +1,19 @@
+require 'json'
+require 'open3'
+require 'amazing_print'
 module Rralph
   class Runner
     attr_reader :cycle_count, :failure_count, :max_failures
 
     def initialize(
       max_failures: 3,
-      ai_command: "qwen-code -y -s",
+      ai_command: 'qwen-code -y -s',
       watch: false,
-      plan_path: "plan.md",
-      learnings_path: "learnings.md",
-      todo_path: "todo.md",
-      skip_commit: false
+      plan_path: 'plan.md',
+      learnings_path: 'learnings.md',
+      todo_path: 'todo.md',
+      skip_commit: false,
+      verbose: false
     )
       @max_failures = max_failures
       @ai_command = ai_command
@@ -18,6 +22,7 @@ module Rralph
       @learnings_path = learnings_path
       @todo_path = todo_path
       @skip_commit = skip_commit
+      @verbose = verbose
 
       @cycle_count = 0
       @failure_count = 0
@@ -37,28 +42,24 @@ module Rralph
     def run
       log("Starting rralph with max_failures=#{@max_failures}, ai_command='#{@ai_command}'")
 
-      unless @git.in_git_repo?
-        raise GitError, "Not in a git repository. Please initialize git first."
-      end
+      raise GitError, 'Not in a git repository. Please initialize git first.' unless @git.in_git_repo?
 
       @parser.load_files
 
       if todo_empty_or_missing?
-        log("todo.md is empty or missing. Generating todo list from plan...")
+        log('todo.md is empty or missing. Generating todo list from plan...')
         generate_todo_from_plan
         return true
       end
 
       unless @parser.has_pending_tasks?
-        log("All tasks completed! Well done!")
+        log('All tasks completed! Well done!')
         return true
       end
 
-      if @watch
-        run_watch_loop
-      else
-        run_single_cycle
-      end
+      return run_watch_loop if @watch
+
+      run_single_cycle
     end
 
     private
@@ -69,8 +70,6 @@ module Rralph
         break unless success
         break unless @parser.has_pending_tasks?
         break if @failure_count >= @max_failures
-
-        sleep 1
       end
 
       check_final_state
@@ -82,7 +81,7 @@ module Rralph
       @parser.load_files
 
       unless @parser.has_pending_tasks?
-        log("All tasks completed! Well done!")
+        log('All tasks completed! Well done!')
         return false
       end
 
@@ -118,14 +117,12 @@ module Rralph
       @file_updater.append_learnings(new_learnings) if new_learnings.any?
 
       if @skip_commit
-        log("⏭️  [Cycle #{@cycle_count}] Skipping commit (skip_commit enabled)")
+        log("⏭️ [Cycle #{@cycle_count}] Skipping commit (skip_commit enabled)")
       else
         commit_message = "rralph: #{current_task[:text]} [cycle #{@cycle_count}]"
         sha = @git.commit_changes(commit_message)
 
-        if sha
-          log("   Git commit: #{sha}")
-        end
+        log("   Git commit: #{sha}") if sha
       end
 
       true
@@ -143,55 +140,99 @@ module Rralph
       if @failure_count >= @max_failures
         exit 1
       elsif !@parser.has_pending_tasks?
-        log("All tasks completed! Well done!")
+        log('All tasks completed! Well done!')
         exit 0
       end
     end
 
     def execute_ai_command(prompt)
-      require "tempfile"
-
-      # Write prompt to a temporary file
-      prompt_file = Tempfile.new(["rralph_prompt", ".txt"])
-      prompt_file.write(prompt)
-      prompt_file.close
-
-      # Read response from a temporary file  
-      response_file = Tempfile.new(["rralph_response", ".txt"])
-      response_file.close
+      full_response = ''
 
       begin
-        # Use bash -c with proper stdin redirection
-        cmd = "bash -c #{@ai_command.shellescape} < #{prompt_file.path} > #{response_file.path} 2>&1"
-        log("   Executing: #{@ai_command}")
-        system(cmd)
+        log('Executing AI command...')
 
-        log("   Command exit status: #{$?.exitstatus}")
-        
-        response = File.read(response_file.path)
-        response.strip.empty? ? nil : response
-      ensure
-        prompt_file.unlink
-        response_file.unlink
+        # Use stream-json mode for real-time logging
+        cmd = "#{@ai_command} -y -s -o stream-json"
+
+        Open3.popen3(cmd) do |stdin, stdout, _stderr, wait_thr|
+          # Write prompt to stdin and close
+          stdin.write(prompt)
+          stdin.close
+
+          # Process stdout line by line for real-time streaming
+          stdout.each_line do |line|
+            event = JSON.parse(line)
+
+            case event['type']
+            when 'assistant'
+              content = event.dig('message', 'content')
+              content&.each do |item|
+                case item['type']
+                when 'thinking'
+                  log("[Thinking] #{item['thinking']}") if @verbose
+                when 'text'
+                  text = item['text']
+                  full_response += text
+                  log("[text] #{text}") if @verbose
+                when 'tool_use'
+                  tool_name = item['name']
+                  tool_input = item['input']
+                  log("[tool_use] #{tool_name}: #{tool_input.to_json}") if @verbose
+                end
+              end
+            when 'user'
+              if @verbose
+                content = event.dig('message', 'content')
+                content&.each do |item|
+                  if item['type'] == 'tool_result'
+                    tool_name = item.dig('tool_use_id')&.split('_')&.first || 'tool'
+                    result = item['content']
+                    log("[#{tool_name}] #{result}")
+                  elsif item['type'] == 'text'
+                    log("[text] #{item['text']}")
+                  end
+                end
+              end
+            when 'result'
+              duration = event['duration_ms']
+              tokens = event.dig('usage', 'total_tokens')
+              is_error = event['is_error']
+              if is_error
+                log('AI command failed')
+              else
+                log("Completed in #{duration}ms (#{tokens} tokens)")
+              end
+            else
+              log("   [event: #{event['type']}]") if @verbose
+            end
+          rescue JSON::ParserError
+            # Skip non-JSON lines
+            log("   #{line.chomp}") if @verbose
+          end
+
+          log("   Command exit status: #{wait_thr.value.exitstatus}")
+        end
+
+        full_response.strip.empty? ? nil : full_response
+      rescue Errno::ENOENT => e
+        log("Error: AI command '#{@ai_command}' not found: #{e.message}")
+        nil
+      rescue StandardError => e
+        log("Error executing AI command: #{e.message}")
+        nil
       end
-    rescue Errno::ENOENT => e
-      log("Error: AI command '#{@ai_command}' not found: #{e.message}")
-      nil
-    rescue => e
-      log("Error executing AI command: #{e.message}")
-      nil
     end
 
     def save_ai_log(prompt, response)
-      logs_dir = "logs"
+      logs_dir = 'logs'
       Dir.mkdir(logs_dir) unless Dir.exist?(logs_dir)
 
-      timestamp = Time.now.strftime("%Y%m%d_%H%M%S")
+      timestamp = Time.now.iso8601
       filename = "#{logs_dir}/cycle_#{@cycle_count}_#{timestamp}.md"
 
       # Extract just the current task for the header
       task_match = prompt.match(/YOUR CURRENT TASK.*?\n>\s*(.+?)\n/)
-      task_text = task_match ? task_match[1].strip : "Unknown"
+      task_text = task_match ? task_match[1].strip : 'Unknown'
 
       content = <<~LOG
         # Cycle #{@cycle_count} - #{timestamp}
@@ -201,7 +242,7 @@ module Rralph
 
         ## AI Response
 
-        #{response || "(no response)"}
+        #{response || '(no response)'}
       LOG
 
       File.write(filename, content)
@@ -209,18 +250,31 @@ module Rralph
     end
 
     def log(message)
-      $stderr.puts(message)
+      warn(message)
     end
 
     def todo_empty_or_missing?
       return true unless File.exist?(@todo_path)
 
       content = File.read(@todo_path)
-      content.strip.empty? || !content.match?(/^- \[ \]/m)
+      content.strip.empty?
     end
 
     def generate_todo_from_plan
-      prompt = <<~PROMPT
+      prompt = build_todo_generation_prompt
+      response = execute_ai_command(prompt)
+
+      return log('❌ AI command failed when generating todo') unless response
+
+      todo_items = extract_todo_items(response)
+      return log('❌ Could not parse tasks from AI response') if todo_items.empty?
+
+      save_todo_file(todo_items)
+      handle_todo_commit(todo_items.size)
+    end
+
+    def build_todo_generation_prompt
+      <<~PROMPT
         Based on the following plan, generate a todo list with actionable tasks.
         Format each task as a markdown checkbox like: - [ ] Task description
         Keep tasks specific and actionable.
@@ -228,32 +282,29 @@ module Rralph
         --- plan.md ---
         #{@parser.plan_content}
       PROMPT
+    end
 
-      response = execute_ai_command(prompt)
+    def extract_todo_items(response)
+      response.scan(/^- \[ \] .+$/).uniq
+    end
 
-      if response
-        todo_items = response.scan(/^- \[ \] .+$/).uniq
+    def save_todo_file(todo_items)
+      todo_content = <<~TODO
+        # Todo List
 
-        if todo_items.any?
-          todo_content = "# Todo List\n\n" + todo_items.join("\n") + "\n"
+        #{todo_items.join("\n")}
+      TODO
 
-          File.write(@todo_path, todo_content)
+      File.write(@todo_path, todo_content)
+    end
 
-          if @skip_commit
-            log("⏭️  Generated #{todo_items.size} tasks (skip_commit enabled, no commit)")
-          else
-            commit_message = "rralph: generated todo from plan.md"
-            sha = @git.commit_changes(commit_message)
-
-            if sha
-              log("✅ Generated #{todo_items.size} tasks. Git commit: #{sha}")
-            end
-          end
-        else
-          log("❌ Could not parse tasks from AI response")
-        end
+    def handle_todo_commit(task_count)
+      if @skip_commit
+        log("⏭️  Generated #{task_count} tasks (skip_commit enabled, no commit)")
       else
-        log("❌ AI command failed when generating todo")
+        commit_message = 'rralph: generated todo from plan.md'
+        sha = @git.commit_changes(commit_message)
+        log("✅ Generated #{task_count} tasks. Git commit: #{sha}") if sha
       end
     end
   end

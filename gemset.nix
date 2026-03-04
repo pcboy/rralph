@@ -1,4 +1,14 @@
 {
+  amazing_print = {
+    groups = ["development"];
+    platforms = [];
+    source = {
+      remotes = ["https://rubygems.org"];
+      sha256 = "0sjxbqsngcj6q9bz2r2wpf1k2n73mxb203na4znkg3f7dajandif";
+      type = "gem";
+    };
+    version = "2.0.0";
+  };
   ast = {
     groups = ["default" "test"];
     platforms = [];
