@@ -7,7 +7,7 @@ module Rralph
 
     def initialize(
       max_failures: 3,
-      ai_command: 'qwen-code -y -s',
+      ai_command: 'qwen-code -y -s -o stream-json',
       watch: false,
       plan_path: 'plan.md',
       learnings_path: 'learnings.md',
@@ -157,8 +157,7 @@ module Rralph
       begin
         log('Executing AI command...')
 
-        # Use stream-json mode for real-time logging
-        cmd = "#{@ai_command} -y -s -o stream-json"
+        cmd = @ai_command
 
         Open3.popen3(cmd) do |stdin, stdout, _stderr, wait_thr|
           # Write prompt to stdin and close
@@ -212,7 +211,8 @@ module Rralph
               log("   [event: #{event['type']}]") if @verbose
             end
           rescue JSON::ParserError
-            # Skip non-JSON lines
+            # Non-JSON output (e.g., plain text from AI) - still capture it
+            full_response += line
             log("   #{line.chomp}") if @verbose
           end
 

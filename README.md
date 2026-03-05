@@ -84,7 +84,7 @@ rralph --max-failures 2 --watch
 ### Command-Line Options
 
 ```
-➜  rralph help      
+➜  rralph help
 Commands:
   rralph help [COMMAND]  # Describe available commands or one specific command
   rralph start           # Run the rralph orchestrator
@@ -100,7 +100,7 @@ Options:
   -m, [--max-failures=N]                       # Maximum allowed failures before stopping
                                                # Default: 3
   -a, [--ai-command=AI_COMMAND]                # AI command to invoke
-                                               # Default: qwen-code -y -s
+                                               # Default: qwen-code -y -s -o stream-json
   -w, [--watch], [--no-watch], [--skip-watch]  # Run in continuous loop until completion or max failures
                                                # Default: false
   -p, [--plan-path=PLAN_PATH]                  # Path to plan.md file
@@ -129,10 +129,10 @@ Run continuously until all tasks are done or max failures reached:
 rralph start --watch --max-failures 5
 ```
 
-Use a custom AI command:
+Use a custom AI command (e.g claude-code-router + claude-code):
 
 ```bash
-rralph start --ai-command "claude --prompt"
+rralph start --ai-command "ccr code"
 ```
 
 Skip git commits between tasks (files are updated but not committed):
@@ -192,6 +192,7 @@ rralph start --verbose
 ```
 
 Verbose output shows:
+
 - Thinking: AI's thought process as it thinks
 - Real-time text output from the AI
 - Completion metrics (duration, token usage)
