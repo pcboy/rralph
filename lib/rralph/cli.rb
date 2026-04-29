@@ -11,7 +11,7 @@ module Rralph
                   desc: 'Maximum allowed failures before stopping'
     method_option :ai_command,
                   type: :string,
-                  default: 'qwen-code -y -s -o stream-json',
+                  default: 'qwen -y -s -o stream-json',
                   aliases: '-a',
                   desc: 'AI command to invoke'
     method_option :watch,

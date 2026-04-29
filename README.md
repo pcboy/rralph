@@ -12,7 +12,7 @@ A self-improving task orchestrator for AI-assisted development. Based on Ralph W
 gem install rralph
 ```
 
-Ralph by default uses `qwen-code` as the AI agent. You can override this with the `--ai-command` flag.
+Ralph by default uses `qwen` as the AI agent. You can override this with the `--ai-command` flag.
 
 ## Usage
 
@@ -100,7 +100,7 @@ Options:
   -m, [--max-failures=N]                       # Maximum allowed failures before stopping
                                                # Default: 3
   -a, [--ai-command=AI_COMMAND]                # AI command to invoke
-                                               # Default: qwen-code -y -s -o stream-json
+                                               # Default: qwen -y -s -o stream-json
   -w, [--watch], [--no-watch], [--skip-watch]  # Run in continuous loop until completion or max failures
                                                # Default: false
   -p, [--plan-path=PLAN_PATH]                  # Path to plan.md file
@@ -177,7 +177,7 @@ Learnings: 6 lines
 By default, `rralph` outputs concise progress logs to stderr:
 
 ```
-Starting rralph with max_failures=3, ai_command='qwen-code -y -s'
+Starting rralph with max_failures=3, ai_command='qwen -y -s'
 Cycle 1: Processing task: Create odd_even.sh file with bash shebang
 Executing AI command...
 Completed in 2341ms (13407 tokens)

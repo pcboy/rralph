@@ -7,7 +7,7 @@ module Rralph
 
     def initialize(
       max_failures: 3,
-      ai_command: 'qwen-code -y -s -o stream-json',
+      ai_command: 'qwen -y -s -o stream-json',
       watch: false,
       plan_path: 'plan.md',
       learnings_path: 'learnings.md',
